@@ -1,17 +1,19 @@
 package org.leo_s.task_manager_api.core.task;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
+import org.leo_s.task_manager_api.core.user.User;
 
 @Entity
+@Table(name = "tasks")
 public class Task {
 
     @Id
     @GeneratedValue
     private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     private String name;
     private long createdAt;
@@ -23,7 +25,8 @@ public class Task {
     protected Task() {
     }
 
-    public Task(String name, long createdAt, long durationMillis) {
+    public Task(User user, String name, long createdAt, long durationMillis) {
+        this.user = user;
         this.name = name;
         this.createdAt = createdAt;
         this.endAt = createdAt + durationMillis;
@@ -32,6 +35,10 @@ public class Task {
 
     public Long getId() {
         return id;
+    }
+
+    public User getUser() {
+        return user;
     }
 
     public String getName() {
