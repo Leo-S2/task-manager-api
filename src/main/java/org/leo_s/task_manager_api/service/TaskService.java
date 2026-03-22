@@ -6,37 +6,36 @@ import org.leo_s.task_manager_api.core.task.Task;
 import org.leo_s.task_manager_api.core.task.TaskStatus;
 import org.leo_s.task_manager_api.core.user.User;
 import org.leo_s.task_manager_api.repository.TaskRepository;
-import org.leo_s.task_manager_api.repository.UserRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 @Service
 public class TaskService {
 
     private final TaskRepository taskRepository;
-    private final UserRepository userRepository;
+    private final CurrentUserService currentUserService;
 
-    public TaskService(TaskRepository taskRepository, UserRepository userRepository) {
+    public TaskService(TaskRepository taskRepository, CurrentUserService currentUserService) {
         this.taskRepository = taskRepository;
-        this.userRepository = userRepository;
+        this.currentUserService = currentUserService;
     }
 
-    public List<TaskResponse> getTasks(UUID userId, TaskStatus status, String name) {
+    public List<TaskResponse> getTasks(TaskStatus status, String name) {
+        User user = currentUserService.getCurrentUser();
         List<Task> tasks;
 
         if(status == null && (name == null || name.isEmpty())){
-            tasks = taskRepository.findByUserId(userId);
+            tasks = taskRepository.findByUserId(user.getId());
         }else if(status != null && (name == null || name.isEmpty())){
-            tasks = taskRepository.findByUserIdAndStatus(userId, status);
+            tasks = taskRepository.findByUserIdAndStatus(user.getId(), status);
         }else if(status == null){
-            tasks = taskRepository.findByUserIdAndNameContainingIgnoreCase(userId, name);
+            tasks = taskRepository.findByUserIdAndNameContainingIgnoreCase(user.getId(), name);
         }else{
-            tasks = taskRepository.findByUserIdAndStatusAndNameContainingIgnoreCase(userId, status, name);
+            tasks = taskRepository.findByUserIdAndStatusAndNameContainingIgnoreCase(user.getId(), status, name);
         }
 
         return tasks.stream()
@@ -44,19 +43,17 @@ public class TaskService {
                 .toList();
     }
 
-    public TaskResponse getTaskById(Long id, UUID userId) {
-        return TaskResponse.of(taskRepository.findByIdAndUserId(id, userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Task not found")));
+    public TaskResponse getTaskById(Long id) {
+        return TaskResponse.of(getTaskEntityById(id));
     }
 
-    private Task getTaskEntityById(Long id, UUID userId) {
-        return taskRepository.findByIdAndUserId(id, userId)
+    private Task getTaskEntityById(Long id) {
+        return taskRepository.findByIdAndUserId(id, currentUserService.getCurrentUser().getId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Task not found"));
     }
 
-    public TaskResponse createTask(TaskRequest request, UUID userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+    public TaskResponse createTask(TaskRequest request) {
+        User user = currentUserService.getCurrentUser();
 
         long createdAt = System.currentTimeMillis();
         long durationMillis = TimeUnit.SECONDS.toMillis(request.durationSeconds());
@@ -71,13 +68,13 @@ public class TaskService {
         return TaskResponse.of(taskRepository.save(task));
     }
 
-    public void deleteTask(Long id, UUID userId) {
-        Task task = getTaskEntityById(id, userId);
+    public void deleteTask(Long id) {
+        Task task = getTaskEntityById(id);
         taskRepository.delete(task);
     }
 
-    public TaskResponse completeTask(Long id, UUID userId) {
-        Task task = getTaskEntityById(id, userId);
+    public TaskResponse completeTask(Long id) {
+        Task task = getTaskEntityById(id);
 
         if (task.getStatus() == TaskStatus.COMPLETE) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Task is already completed");
@@ -87,8 +84,8 @@ public class TaskService {
         return TaskResponse.of(taskRepository.save(task));
     }
 
-    public TaskResponse updateTitleTask(Long id, UUID userId, String title) {
-        Task task = getTaskEntityById(id, userId);
+    public TaskResponse updateTitleTask(Long id, String title) {
+        Task task = getTaskEntityById(id);
 
         if (task.getStatus() == TaskStatus.COMPLETE) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Completed task cannot be updated");
@@ -98,8 +95,8 @@ public class TaskService {
         return TaskResponse.of(taskRepository.save(task));
     }
 
-    public TaskResponse extendTimeTask(Long id, UUID userId, long durationSeconds) {
-        Task task = getTaskEntityById(id, userId);
+    public TaskResponse extendTimeTask(Long id, long durationSeconds) {
+        Task task = getTaskEntityById(id);
 
         if (task.getStatus() == TaskStatus.COMPLETE) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Completed task cannot be updated");

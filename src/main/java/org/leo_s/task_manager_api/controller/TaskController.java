@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/users/{userId}/tasks")
+@RequestMapping("/tasks")
 public class TaskController {
 
     private final TaskService taskService;
@@ -25,45 +25,43 @@ public class TaskController {
     }
 
     @GetMapping
-    public List<TaskResponse> getTasks(@PathVariable UUID userId,
-                                       @RequestParam(required = false) TaskStatus status,
+    public List<TaskResponse> getTasks(@RequestParam(required = false) TaskStatus status,
                                        @RequestParam(required = false) String name) {
-        return taskService.getTasks(userId, status, name);
+        return taskService.getTasks(status, name);
     }
 
     @GetMapping("/{id}")
-    public TaskResponse getTaskById(@PathVariable UUID userId, @PathVariable Long id) {
-        return taskService.getTaskById(id, userId);
+    public TaskResponse getTaskById(@PathVariable Long id) {
+        return taskService.getTaskById(id);
     }
 
     @PostMapping
-    public ResponseEntity<TaskResponse> createTask(@PathVariable UUID userId,
-                                                   @Valid @RequestBody TaskRequest request) {
-        TaskResponse savedTask = taskService.createTask(request, userId);
+    public ResponseEntity<TaskResponse> createTask(@Valid @RequestBody TaskRequest request) {
+        TaskResponse savedTask = taskService.createTask(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(savedTask);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteTask(@PathVariable UUID userId, @PathVariable Long id) {
-        taskService.deleteTask(id, userId);
+    public ResponseEntity<Void> deleteTask(@PathVariable Long id) {
+        taskService.deleteTask(id);
         return ResponseEntity.noContent().build();
     }
 
     @PutMapping("/{id}/complete")
-    public ResponseEntity<TaskResponse> completeTask(@PathVariable UUID userId, @PathVariable Long id) {
-        TaskResponse updatedTask = taskService.completeTask(id, userId);
+    public ResponseEntity<TaskResponse> completeTask(@PathVariable Long id) {
+        TaskResponse updatedTask = taskService.completeTask(id);
         return ResponseEntity.ok(updatedTask);
     }
 
     @PutMapping("/{id}/title")
-    public ResponseEntity<TaskResponse> updateTitle(@PathVariable UUID userId, @PathVariable Long id,
+    public ResponseEntity<TaskResponse> updateTitle(@PathVariable Long id,
                                                     @Valid @RequestBody UpdateTaskTitleRequest request) {
-        return ResponseEntity.ok(taskService.updateTitleTask(id, userId, request.title()));
+        return ResponseEntity.ok(taskService.updateTitleTask(id, request.title()));
     }
 
     @PutMapping("/{id}/extend-time")
-    public ResponseEntity<TaskResponse> extendTime(@PathVariable UUID userId, @PathVariable Long id,
+    public ResponseEntity<TaskResponse> extendTime(@PathVariable Long id,
                                                    @Valid @RequestBody ExtendTaskTimeRequest request) {
-        return ResponseEntity.ok(taskService.extendTimeTask(id, userId, request.durationSeconds()));
+        return ResponseEntity.ok(taskService.extendTimeTask(id, request.durationSeconds()));
     }
 }

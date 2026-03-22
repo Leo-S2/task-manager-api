@@ -6,6 +6,8 @@ services:
       POSTGRES_DB: task_manager_api
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: leo123
+      JWT_SECRET: YJOLtUtJ1GJykDJveLEEXUVQGd+NMlGnmJJnFJFyTs0=
+      JWT_EXPIRATION: 86400000
     ports:
       - "5432:5432"
     volumes:
@@ -20,6 +22,8 @@ services:
       DB_URL: jdbc:postgresql://postgres:5432/task_manager_api
       DB_USERNAME: postgres
       DB_PASSWORD: leo123
+      JWT_SECRET: YJOLtUtJ1GJykDJveLEEXUVQGd+NMlGnmJJnFJFyTs0=
+      JWT_EXPIRATION: 86400000
     ports:
       - "8080:8080"
 
