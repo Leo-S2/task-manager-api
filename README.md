@@ -1,18 +1,18 @@
 # Task Manager API
 
-API REST para gestionar tareas con Spring Boot.
+REST API for managing tasks with Spring Boot.
 
-## Tecnologías
+## Technologies
 - Java 21
 - Spring Boot
 - Spring Data JPA
 - H2 / PostgreSQL
 - Gradle
 
-## Cómo ejecutar
-1. Clona el repositorio
-2. Configura la base de datos
-3. Ejecuta:
+## How to Run
+1. Clone the repository
+2. Configure the database
+3. Run:
    ./gradlew bootRun
 
 ## Endpoints
@@ -24,9 +24,9 @@ API REST para gestionar tareas con Spring Boot.
 - PUT /tasks/{id}/extend-time
 - DELETE /tasks/{id}
 
-## Ejemplo de creación
+## Creation Example
 POST /tasks
 {
-"title": "Estudiar Spring Boot",
+"title": "Study Spring Boot",
 "durationSeconds": 60
 }

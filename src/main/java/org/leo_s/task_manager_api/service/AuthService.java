@@ -63,7 +63,10 @@ public class AuthService {
         );
 
         String token = jwtService.generateToken(request.email());
-        return new AuthResponse(token);
+        User user = userRepository.findByEmail(request.email())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+        return new AuthResponse(user.getId(), token);
     }
 
     @Transactional
