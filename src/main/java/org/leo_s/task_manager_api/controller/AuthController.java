@@ -37,4 +37,10 @@ public class AuthController {
         authService.delete(id);
         return ResponseEntity.noContent().build();
     }
+
+    @DeleteMapping("/me")
+    public ResponseEntity<Void> deleteCurrentUser() {
+        authService.deleteCurrentUser();
+        return ResponseEntity.noContent().build();
+    }
 }

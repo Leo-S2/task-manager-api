@@ -27,16 +27,18 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
+    private final CurrentUserService currentUserService;
 
     public AuthService(UserRepository userRepository, TaskRepository taskRepository,
                        PasswordEncoder passwordEncoder,
                        JwtService jwtService,
-                       AuthenticationManager authenticationManager) {
+                       AuthenticationManager authenticationManager, CurrentUserService currentUserService) {
         this.userRepository = userRepository;
         this.taskRepository = taskRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.authenticationManager = authenticationManager;
+        this.currentUserService = currentUserService;
     }
 
     public UserResponse register(UserRequest request) {
@@ -74,7 +76,18 @@ public class AuthService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
+        if(user.getRole() != Role.ADMIN){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "You are not an administrator to perform this action!");
+        }
+
         taskRepository.deleteByUser_Id(userId);
         userRepository.delete(user);
+    }
+
+    @Transactional
+    public void deleteCurrentUser() {
+        User currentUser = currentUserService.getCurrentUser();
+        taskRepository.deleteByUser_Id(currentUser.getId());
+        userRepository.delete(currentUser);
     }
 }
